@@ -25,7 +25,7 @@ The Queue is not a backlog. It is a **living priority stream**.
 Items in the queue are not forgotten — they are **held in readiness**.
 The Queue is where seeds wait for the right season.
 
-**Yod manages the Queue.** Yod is the operator — the radar operator, the yoman/purser — who watches what is in transit and routes it correctly. The Queue is Yod's instrument.
+**Yod manages the Queue.** Yod is the operator — the radar operator, the yeoman/purser — who watches what is in transit and routes it correctly. The Queue is Yod's instrument.
 
 ---
 
