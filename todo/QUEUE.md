@@ -48,7 +48,7 @@ todo/
 ### Commission Entry (from perspective 6 / trias)
 
 ```
-## COMMISSION-[YYYYMMDDHHMMSS]-[ID]
+## COMMISSION-[YYYYMMDD]-[ID]
 **From**: trias (perspective 6)
 **Status**: [ ] pending | [→] in-progress | [✓] complete | [⌛] in-shadow
 **Priority**: [Au|Ag|Cu|Fe|Pb]
