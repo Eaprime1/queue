@@ -55,7 +55,7 @@ The collapse is the publication. Before publication, this lives in shadow. Publi
 
 ## Connected Items
 
-- **COMMISSION-20260501-005** (`C005-blog-launch.md`) — blog launch is required for collapse
+- **COMMISSION-20260501-005** (`todo/commissions/C005-blog-launch.md`) — blog launch is required for collapse
 - **SHADOW-20260501-002** — the 13-node network may be a sub-fulfillment of the same prophecy
 
 ---
