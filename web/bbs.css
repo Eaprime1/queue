@@ -1,0 +1,236 @@
+/* que // unexusi BBS terminal stylesheet
+   Retro-authentic. NOT a skin — this IS the interface.
+   CRT phosphor, ASCII, sprites. No frameworks. */
+
+/* ── Fonts ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+/* ── Reset ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── CRT palette ────────────────────────────────────── */
+:root {
+  --bg:          #0a0a00;
+  --phosphor:    #c8c800;   /* amber phosphor */
+  --green:       #00c840;
+  --cyan:        #00c8c8;
+  --red:         #c83200;
+  --dim:         #505028;
+  --scanline:    rgba(0,0,0,0.18);
+  --glow-amber:  0 0 6px #c8c800, 0 0 14px rgba(200,200,0,0.4);
+  --glow-green:  0 0 6px #00c840, 0 0 14px rgba(0,200,64,0.4);
+  --glow-cyan:   0 0 6px #00c8c8, 0 0 14px rgba(0,200,200,0.4);
+  --font:        'Share Tech Mono', 'Courier New', monospace;
+  --line:        1.4;
+}
+
+/* ── Base ───────────────────────────────────────────── */
+html, body {
+  width: 100%; height: 100%;
+  background: #000;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font);
+}
+
+/* ── Screen — CRT envelope ──────────────────────────── */
+#screen {
+  position: relative;
+  width: min(900px, 100vw);
+  height: min(600px, 100vh);
+  background: var(--bg);
+  border: 2px solid #282800;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(200,200,0,0.15), inset 0 0 60px rgba(0,0,0,0.5);
+}
+
+/* ── Scanlines ──────────────────────────────────────── */
+#scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    var(--scanline) 2px,
+    var(--scanline) 4px
+  );
+}
+
+/* ── Regions ────────────────────────────────────────── */
+.region {
+  position: absolute;
+  inset: 0;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hidden { display: none !important; }
+
+/* ── Boot screen ────────────────────────────────────── */
+#boot {
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+#boot-art {
+  color: var(--phosphor);
+  text-shadow: var(--glow-amber);
+  font-size: clamp(6px, 1.1vw, 11px);
+  line-height: 1.2;
+  white-space: pre;
+  text-align: center;
+}
+
+.boot-log {
+  color: var(--green);
+  font-size: 12px;
+  line-height: 1.8;
+  text-align: left;
+  min-height: 100px;
+  max-height: 140px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 560px;
+}
+
+/* ── Terminal ───────────────────────────────────────── */
+#terminal {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ── Header bar ─────────────────────────────────────── */
+#header-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  padding: 4px 0 6px;
+  border-bottom: 1px solid var(--dim);
+  flex-shrink: 0;
+}
+
+/* ── Output area ────────────────────────────────────── */
+#output {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dim) transparent;
+  font-size: 12px;
+  line-height: var(--line);
+}
+
+#output .line {
+  display: block;
+  padding: 1px 0;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.line.system  { color: var(--dim); }
+.line.user    { color: var(--phosphor); }
+.line.route   { color: var(--green); }
+.line.hold    { color: #c87800; }
+.line.error   { color: var(--red); }
+.line.q       { color: var(--cyan); }
+.line.gland   { color: #a000c8; }
+.line.blank   { color: transparent; user-select: none; }
+
+/* ── Prompt row ─────────────────────────────────────── */
+#prompt-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 0 4px;
+  border-top: 1px solid var(--dim);
+  flex-shrink: 0;
+}
+
+#input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--phosphor);
+  font-family: var(--font);
+  font-size: 13px;
+  caret-color: transparent; /* we render our own cursor */
+  text-shadow: var(--glow-amber);
+}
+
+/* ── Status bar ─────────────────────────────────────── */
+#status-bar {
+  display: flex;
+  gap: 6px;
+  font-size: 10px;
+  padding: 4px 0 0;
+  border-top: 1px solid #1a1a00;
+  flex-shrink: 0;
+}
+
+/* ── Colour utilities ───────────────────────────────── */
+.amber  { color: var(--phosphor); text-shadow: var(--glow-amber); }
+.green  { color: var(--green);    text-shadow: var(--glow-green); }
+.cyan   { color: var(--cyan);     text-shadow: var(--glow-cyan); }
+.red    { color: var(--red); }
+.dim    { color: var(--dim); }
+
+/* ── Blink ──────────────────────────────────────────── */
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ── Sprite keyframe animations ─────────────────────── */
+/* tube sprite — animated dots traveling */
+@keyframes tube-travel {
+  0%   { letter-spacing: 0; }
+  50%  { letter-spacing: 4px; color: var(--cyan); }
+  100% { letter-spacing: 0; }
+}
+.sprite-tube { animation: tube-travel 0.6s ease; display: inline-block; }
+
+/* teleport sprite */
+@keyframes teleport-flash {
+  0%   { opacity: 1; transform: scaleX(1); }
+  40%  { opacity: 0; transform: scaleX(0); }
+  60%  { opacity: 0; transform: scaleX(0); }
+  100% { opacity: 1; transform: scaleX(1); }
+}
+.sprite-teleport { animation: teleport-flash 0.4s ease; display: inline-block; }
+
+/* train sprite */
+@keyframes train-roll {
+  0%   { transform: translateX(-8px); }
+  100% { transform: translateX(0); }
+}
+.sprite-train { animation: train-roll 0.3s ease; display: inline-block; }
+
+/* ── Scrollbar ──────────────────────────────────────── */
+#output::-webkit-scrollbar       { width: 4px; }
+#output::-webkit-scrollbar-track { background: transparent; }
+#output::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+
+/* ── Responsive: small screens ──────────────────────── */
+@media (max-width: 600px) {
+  #status-bar { display: none; }
+  #header-bar { font-size: 9px; gap: 4px; }
+  #boot-art   { font-size: 5px; }
+}
