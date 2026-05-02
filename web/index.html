@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>que // unexusi terminal</title>
+  <link rel="stylesheet" href="bbs.css">
+</head>
+<body>
+  <div id="screen">
+
+    <!-- Scanline overlay — CRT effect -->
+    <div id="scanlines"></div>
+
+    <!-- Boot sequence -->
+    <div id="boot" class="region">
+      <pre id="boot-art" class="ascii-art" aria-label="que system logo"></pre>
+      <div id="boot-log" class="boot-log"></div>
+    </div>
+
+    <!-- Main terminal -->
+    <div id="terminal" class="region hidden">
+      <div id="header-bar">
+        <span class="dim">∰</span>
+        <span id="clock" class="amber">00000000000000</span>
+        <span class="dim">│</span>
+        <span class="green">que</span>
+        <span class="dim">//</span>
+        <span class="cyan">unexusi</span>
+        <span class="dim">│</span>
+        <span id="stream-indicator" class="dim">rivus</span>
+        <span class="dim">│</span>
+        <span id="health-dot" class="green">●</span>
+      </div>
+
+      <div id="output" role="log" aria-live="polite"></div>
+
+      <div id="prompt-row">
+        <span class="amber">que</span>
+        <span class="dim">://</span>
+        <span id="transport-badge" class="cyan">[tube]</span>
+        <span class="dim"> &gt; </span>
+        <input
+          id="input"
+          type="text"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          aria-label="queue terminal input"
+          maxlength="512"
+        >
+        <span id="cursor-block" class="amber cursor-blink">█</span>
+      </div>
+
+      <div id="status-bar">
+        <span class="dim">F1:HELP</span>
+        <span class="dim">│</span>
+        <span class="dim">F2:TRANSPORT</span>
+        <span class="dim">│</span>
+        <span class="dim">F3:QUEUE</span>
+        <span class="dim">│</span>
+        <span class="dim">F4:GLANDS</span>
+        <span class="dim">│</span>
+        <span class="dim">F5:Q-TABLE</span>
+        <span class="dim">│</span>
+        <span id="interrupt-count" class="dim">Q:0</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="bbs.js"></script>
+</body>
+</html>
