@@ -57,7 +57,7 @@ todo/
 **Assign to**: [entity: Claude|Gemini|Perplexity|Copilot|Eric|queue/shadows]
 **Requires**: [dependencies if any]
 **Output target**: [where the work product goes]
-**Queue file**: `todo/commissions/[ID].md`
+**Queue file**: `todo/commissions/[ID]-[slug].md`
 ∰ [timestamp]
 ```
 
