@@ -44,7 +44,7 @@ Create `YOD.md` — Yod entity declaration.
 ## Acceptance Criteria
 
 - [x] `todo/YOD.md` created
-- [x] Yod's three roles documented (radar operator, yoman/purser, conduit manager)
+- [x] Yod's three roles documented (radar operator, yeoman/purser, conduit manager)
 - [x] Yod's protocol documented
 - [x] Yod's relationship to all perspectives documented
 - [x] Yod's tools listed
