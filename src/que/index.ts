@@ -46,7 +46,7 @@ function transportToStream(transport: TransportMode): StreamLevel {
 export function stage(concept: ConceptPayload): QueueItem {
   const origin = resolveDotIdentity();
   return {
-    id: `que-${Date.now()}`,
+    id: qid('que'),
     type: 'commission',     // concepts default to commission; Yod may reclassify
     priority: inferPriority(concept.text),
     payload: concept,
