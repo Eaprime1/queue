@@ -1,0 +1,144 @@
+name: PDF → Markdown Conversion
+
+# Runs on any PR that adds or modifies a .pdf file.
+# Uses pandoc (available in ubuntu-latest) to convert the PDF to Markdown
+# and commits the .md alongside the .pdf on the PR branch.
+#
+# If conversion fails (e.g. scanned/image PDF), the workflow posts a comment
+# prompting the author to add a .txt or .md version manually.
+#
+# ∰ Water (Drive) → Air (GitHub) — Crystallization Event automation
+
+on:
+  pull_request:
+    paths:
+      - '**.pdf'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  convert:
+    name: Convert PDF to Markdown
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install pandoc and pdftotext
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y pandoc poppler-utils
+
+      - name: Find new or changed PDFs
+        id: find_pdfs
+        run: |
+          # Compare against base branch to find only added/modified PDFs
+          git fetch origin ${{ github.base_ref }} --depth=1
+          PDFS=$(git diff --name-only --diff-filter=AM origin/${{ github.base_ref }}...HEAD -- '*.pdf' || true)
+          echo "pdfs<<EOF" >> $GITHUB_OUTPUT
+          echo "$PDFS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "Found PDFs: $PDFS"
+
+      - name: Convert PDFs to Markdown
+        id: convert
+        if: steps.find_pdfs.outputs.pdfs != ''
+        run: |
+          CONVERTED=""
+          FAILED=""
+          while IFS= read -r pdf; do
+            [ -z "$pdf" ] && continue
+            md="${pdf%.pdf}.md"
+            dir=$(dirname "$pdf")
+            base=$(basename "$pdf" .pdf)
+
+            echo "Converting: $pdf → $md"
+
+            # Try pdftotext first (handles most PDFs reliably)
+            if pdftotext -layout "$pdf" /tmp/raw.txt 2>/dev/null && [ -s /tmp/raw.txt ]; then
+              # Wrap in minimal markdown with header
+              {
+                echo "# $(basename "$pdf" .pdf)"
+                echo ""
+                echo "> ∰ Crystallization Event — auto-converted from \`$(basename "$pdf")\`"
+                echo "> Source: \`$pdf\`"
+                echo "> Converted by: pdf-to-md workflow"
+                echo ""
+                echo "---"
+                echo ""
+                cat /tmp/raw.txt
+              } > "$md"
+              CONVERTED="$CONVERTED\n- \`$md\`"
+              echo "  ✓ converted via pdftotext"
+
+            # Fallback: pandoc direct PDF→md (requires pdflatex, may fail on complex PDFs)
+            elif pandoc "$pdf" -t markdown -o "$md" 2>/dev/null && [ -s "$md" ]; then
+              CONVERTED="$CONVERTED\n- \`$md\`"
+              echo "  ✓ converted via pandoc"
+
+            else
+              FAILED="$FAILED\n- \`$pdf\`"
+              echo "  ✗ conversion failed"
+            fi
+          done <<< "${{ steps.find_pdfs.outputs.pdfs }}"
+
+          echo "converted=$CONVERTED" >> $GITHUB_OUTPUT
+          echo "failed=$FAILED" >> $GITHUB_OUTPUT
+
+      - name: Commit converted files
+        if: steps.convert.outputs.converted != ''
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add '*.md'
+          git diff --cached --quiet || git commit -m "chore: auto-convert PDF(s) to Markdown [pdf-to-md workflow]"
+          git push
+
+      - name: Comment — conversion succeeded
+        if: steps.convert.outputs.converted != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const converted = `${{ steps.convert.outputs.converted }}`;
+            const failed    = `${{ steps.convert.outputs.failed }}`;
+            let body = `## ∰ PDF → Markdown Conversion\n\n`;
+            body += `The following PDFs were automatically converted to Markdown and committed to this branch:\n${converted}\n\n`;
+            if (failed) {
+              body += `> **Could not auto-convert:**\n${failed}\n`;
+              body += `> Please add a \`.txt\` or \`.md\` version manually for these files.\n\n`;
+            }
+            body += `_Crystallization Event: Water (Drive) → Air (GitHub) — automated via \`pdf-to-md\` workflow_`;
+            github.rest.issues.createComment({
+              owner:   context.repo.owner,
+              repo:    context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+      - name: Comment — conversion failed, prompt author
+        if: steps.find_pdfs.outputs.pdfs != '' && steps.convert.outputs.converted == ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `## ∰ PDF → Markdown Conversion\n\n` +
+              `PDFs were detected in this PR but could not be auto-converted (likely an image-based or encrypted PDF).\n\n` +
+              `**Please add a \`.txt\` or \`.md\` version alongside each PDF before merging:**\n` +
+              `\`\`\`\n` +
+              `# Option 1 — use the local conversion script\n` +
+              `bash scripts/pdf-to-md.sh "path/to/your/file.pdf"\n\n` +
+              `# Option 2 — copy-paste content from Google Drive as .txt\n` +
+              `# Option 3 — export directly from Google Docs as Markdown\n` +
+              `\`\`\`\n\n` +
+              `_Crystallization Event blocked — Radix awaits at the Sphincter Gateway._`;
+            github.rest.issues.createComment({
+              owner:   context.repo.owner,
+              repo:    context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
