@@ -1,30 +1,67 @@
-// glands — urgency and affect system
-// The layer between master glands and brain processing.
-// Gives queue its texture, not just its priority.
-// A Pb item + gland trigger can still fire a Q interrupt. The panic attack case.
+// glands — urgency and affect system, aligned with Total Ka Pressure (TKP)
+// TKP rubric from Radix Seed Document (Gemini synthesis):
+//   Gravity  35% — Comfort / stability-anchoring
+//   EMF      30% — Worry / developmental momentum
+//   Synergy  20% — Unoiam / unanimity / amplification
+//   Affinity 15% — Discontent / "grass is greener" drive
+//
+// A Pb item + high TKP weight = escalate (the panic attack case).
+// ∰ 20260502
 
-import { QueueItem, GlandSignal, Affect } from '../types';
+import { QueueItem, GlandSignal, Affect, TKPScore, totalKaPressure } from '../types';
+import { calcRadixFactor } from '../radix';
 
-// Fecal truth signal — ground-truth health check.
-// Unambiguous. Confirms base pattern is persisting.
-// Returns true if the system's fundamental routing pattern is still running.
+// ── Fecal truth signal ────────────────────────────────────────────────────────
+// Ground-truth health check. Unambiguous.
+// Confirms the base routing pattern is still persisting.
 export function fecalTruth(item: QueueItem): boolean {
-  // A healthy signal has: an id, a type, a priority, a timestamp
   return !!(item.id && item.type && item.priority && item.timestamp);
 }
 
-// Detect affect from item content
-function detectAffect(item: QueueItem): Affect {
+// ── TKP scoring from item payload ─────────────────────────────────────────────
+export function scoreTKP(item: QueueItem): TKPScore {
   const text = JSON.stringify(item.payload ?? '').toLowerCase();
-  if (text.includes('urgent') || text.includes('panic') || text.includes('critical')) return 'urgency';
-  if (text.includes('dread') || text.includes('fail') || text.includes('block')) return 'dread';
-  if (text.includes('hunger') || text.includes('need') || text.includes('missing')) return 'hunger';
-  if (text.includes('launch') || text.includes('ship') || text.includes('build')) return 'momentum';
-  if (text.includes('funny') || text.includes('laugh') || text.includes('play')) return 'laughter';
+
+  // Gravity: how stable/comfortable does this feel?
+  const gravity =
+    /comfort|stable|anchor|ground|calm|settled/.test(text) ? 0.85 :
+    /urgent|panic|collapse|broken|lost/.test(text)         ? 0.20 :
+    0.55; // baseline moderate
+
+  // EMF: how much worry/momentum pressure?
+  const emf =
+    /worry|dread|stuck|block|fail/.test(text)     ? 0.85 :
+    /build|launch|ship|momentum|go/.test(text)    ? 0.65 :
+    /calm|done|resolved|complete/.test(text)      ? 0.15 :
+    0.40;
+
+  // Synergy: amplification through combination / unanimity
+  const synergy =
+    /together|unified|unoiam|consensus|all/.test(text) ? 0.90 :
+    /alone|isolated|single|only/.test(text)             ? 0.20 :
+    0.50;
+
+  // Affinity: discontent / directional pull
+  const affinity =
+    /discontent|greener|missing|gap|need|want/.test(text) ? 0.85 :
+    /satisfied|complete|enough|done/.test(text)            ? 0.10 :
+    0.35;
+
+  return { gravity, emf, synergy, affinity };
+}
+
+// ── Affect from TKP ───────────────────────────────────────────────────────────
+export function affectFromTKP(tkp: TKPScore): Affect {
+  const total = totalKaPressure(tkp);
+  if (tkp.emf > 0.7 && tkp.gravity < 0.4)                   return 'urgency';
+  if (tkp.emf > 0.6 && tkp.affinity > 0.5)                  return 'dread';
+  if (tkp.affinity > 0.7 && tkp.synergy < 0.4)              return 'hunger';
+  if (tkp.synergy > 0.6 && tkp.gravity > 0.4)               return 'momentum';
+  if (tkp.synergy > 0.6 && tkp.emf < 0.3)                   return 'laughter';
   return 'stillness';
 }
 
-// Weight by affect — how strongly this affect presses
+// ── Affect weights (legacy + TKP aligned) ────────────────────────────────────
 const AFFECT_WEIGHTS: Record<Affect, number> = {
   urgency:   0.95,
   dread:     0.80,
@@ -34,38 +71,46 @@ const AFFECT_WEIGHTS: Record<Affect, number> = {
   stillness: 0.10,
 };
 
-// The panic attack override: Pb priority can still interrupt if weight is high enough
 const OVERRIDE_THRESHOLD = 0.75;
 
+// ── Full gland assessment ─────────────────────────────────────────────────────
 export function assess(item: QueueItem): GlandSignal {
-  const affect = detectAffect(item);
-  const weight = AFFECT_WEIGHTS[affect];
+  const tkp    = scoreTKP(item);
+  const affect = affectFromTKP(tkp);
+  const weight = totalKaPressure(tkp);
+  const radixFactor = calcRadixFactor(tkp);
+
   return {
     affect,
+    tkp,
     weight,
     canOverride: item.priority === 'Pb' && weight >= OVERRIDE_THRESHOLD,
+    radixFactor,
   };
 }
 
-// Apply gland signal to item — enriches item before routing
+// ── Enrich item with gland data ───────────────────────────────────────────────
 export function enrich(item: QueueItem): QueueItem {
   const signal = assess(item);
   return {
     ...item,
+    tkp:         signal.tkp,
     glandWeight: signal.weight,
-    affect: signal.affect,
+    affect:      signal.affect,
+    radixFactor: signal.radixFactor,
   };
 }
 
-// Stream level adjustment from gland pressure
-// High urgency can elevate stream level
+// ── Stream level from TKP gravity ────────────────────────────────────────────
+// Low gravity = high urgency = stream level rises
 export function adjustStream(
   item: QueueItem,
   signal: GlandSignal,
 ): QueueItem['streamLevel'] {
-  if (signal.weight >= 0.9) return 'torrens';
-  if (signal.weight >= 0.7) return 'amnis';
-  if (signal.weight >= 0.5) return 'flumen';
-  if (signal.weight >= 0.3) return 'rivus';
-  return item.streamLevel;
+  const g = signal.tkp.gravity;
+  if (g < 0.2) return 'torrens';  // gravity collapsed — flood state
+  if (g < 0.4) return 'amnis';
+  if (g < 0.6) return 'flumen';
+  if (g < 0.8) return 'rivus';
+  return item.streamLevel;        // stable gravity — keep current level
 }
