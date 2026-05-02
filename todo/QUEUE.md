@@ -160,7 +160,7 @@ todo/
 **From**: trias (perspective 6)
 **Status**: [x] complete
 **Priority**: Cu
-**Gap detected**: Yod is named and understood (operator, yoman/purser, radar) but has no formal document or implementation. Yod manages the Queue but doesn't exist as an entity yet.
+**Gap detected**: Yod is named and understood (operator, yeoman/purser, radar) but has no formal document or implementation. Yod manages the Queue but doesn't exist as an entity yet.
 **Recommended action**: Create `YOD.md` — Yod entity declaration. Role: Queue operator and .jot conduit manager. Domain: transit and routing.
 **Assign to**: Claude
 **Output target**: `todo/YOD.md` (Yod lives in the Queue by nature)
